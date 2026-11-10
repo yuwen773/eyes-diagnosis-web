@@ -220,12 +220,14 @@ export function useAgentStream() {
     images: [],
     links: [],
   })
-  const abortRef = useRef<AbortController | null>(null)
+  // 句柄带令牌：旧流收尾时新流可能已经建立，不能按「当前句柄」一把清。
+  const abortRef = useRef<{ token: number; controller: AbortController } | null>(null)
+  const streamSeq = useRef(0)
 
   useEffect(
     () => () => {
       // StrictMode 双挂载安全：abort 未激活的 controller 是 no-op
-      abortRef.current?.abort()
+      abortRef.current?.controller.abort()
       abortRef.current = null
     },
     [],
@@ -234,10 +236,14 @@ export function useAgentStream() {
   const send = useCallback(
     async (message: string, threadId: string, urls: string[] = []) => {
       setIsStreaming(true)
+      const token = ++streamSeq.current
       const controller = new AbortController()
-      abortRef.current = controller
+      abortRef.current = { token, controller }
 
+      // 只操作自己这一流：晚到的旧流不得清掉新流的流式态与光标。
+      const isCurrent = () => streamSeq.current === token
       const clearLoading = () => {
+        if (!isCurrent()) return
         setMessages((prev) => clearAllLoading(prev))
       }
 
@@ -250,6 +256,7 @@ export function useAgentStream() {
           },
           {
             onEvent(dto) {
+              if (!isCurrent()) return
               setMessages((prev) => applyStreamEvent(prev, dto))
               if ((dto.messageType ?? "").toLowerCase() === "tool-response") {
                 setResources((prev) => extractResources(dto.content ?? "", prev))
@@ -267,20 +274,23 @@ export function useAgentStream() {
         )
       } catch (e) {
         clearLoading()
-        throw e
+        // 旧流的错误不得冒泡成新流的失败
+        if (isCurrent()) throw e
       } finally {
         // abort 时 fetch-event-source 直接 resolve，不触发 onDone/onError，
         // 所以收尾必须放在 finally——否则被「停止」打断的回复永远带着光标。
-        clearLoading()
-        setIsStreaming(false)
-        abortRef.current = null
+        if (isCurrent()) {
+          clearLoading()
+          setIsStreaming(false)
+          abortRef.current = null
+        }
       }
     },
     [],
   )
 
   const abort = useCallback(() => {
-    abortRef.current?.abort()
+    abortRef.current?.controller.abort()
     abortRef.current = null
     setIsStreaming(false)
   }, [])
@@ -296,7 +306,7 @@ export function useAgentStream() {
 
   const reset = useCallback(() => {
     // 切会话/新建会话必须先中断在途 SSE——否则旧回合的 token 会继续写进新会话
-    abortRef.current?.abort()
+    abortRef.current?.controller.abort()
     abortRef.current = null
     setIsStreaming(false)
     setMessages([])
