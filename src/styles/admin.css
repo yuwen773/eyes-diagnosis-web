@@ -1078,6 +1078,16 @@
   white-space: nowrap;
 }
 
+/* 示例数据的说明不能只靠右上角一个 10px 小标——那是给自己看的。
+   这一行是给可能截图、汇报、复制数字的人看的。 */
+.admin-sample-note {
+  margin: 0 0 22px;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--fg-2);
+  max-width: 68ch;
+}
+
 /* KPI 条：4 列等宽，首块 accent 竖线由 StatTile 自身给出。 */
 .admin-kpis {
   display: grid;

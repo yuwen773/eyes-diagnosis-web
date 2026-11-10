@@ -15,7 +15,13 @@ import {
   reexamineLabel,
   summarizeRecords,
 } from "@/lib/records"
-import { classCode, fixed, formatTimestamp, severityLabel, severityRisk } from "@/lib/domain"
+import {
+  classCode,
+  confidencePercent,
+  formatTimestamp,
+  severityLabel,
+  severityRisk,
+} from "@/lib/domain"
 import { faultFromError } from "@/lib/faults"
 import { useFault } from "@/components/fault"
 import { RecordSheet } from "@/components/RecordSheet"
@@ -169,31 +175,35 @@ export function RecordsPage() {
         <div className="strip records__strip">
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">判读总数 · TOTAL</span>
+              <span className="readout__label">判读总数 · TOTAL（全部）</span>
               <span className="readout__value num">{stats.total}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">高风险 · SEVERE</span>
+              <span className="readout__label">本页高风险 · SEVERE</span>
               <span className="readout__value num">{stats.highRisk}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">待人工复核 · REVIEW</span>
+              <span className="readout__label">本页待人工复核 · REVIEW</span>
               <span className="readout__value num">{stats.awaitingReview}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">最近判读 · LAST</span>
+              <span className="readout__label">本页最新 · LAST IN PAGE</span>
               <span className="readout__value readout__value--mono">
                 {stats.lastReadAt ? formatTimestamp(stats.lastReadAt) : "—"}
               </span>
             </div>
           </div>
         </div>
+
+        <p className="records__scope">
+          总数是你名下的全部判读；其余三项只统计当前这一页（第 {page} / {pages} 页），翻页会变。
+        </p>
 
         {fault ? (
           <FaultPanel
@@ -252,7 +262,7 @@ export function RecordsPage() {
 
                     <span className="records__main">
                       <span className="records__disease">
-                        {item.aiRejected ? "AI 拒识" : item.result || "未给出主诊断"}
+                        {item.aiRejected ? "AI 拒识" : item.result || "未给出判读结果"}
                         <span className="records__code num">{classCode(item.result ?? undefined)}</span>
                       </span>
                       <span className="records__meta">
@@ -274,7 +284,7 @@ export function RecordsPage() {
                       ) : (
                         <>
                           <span className="readout__label">置信度</span>
-                          <span className="records__conf num">{fixed(item.confidence ?? undefined)}</span>
+                          <span className="records__conf num">{confidencePercent(item.confidence)}</span>
                           <RiskTag risk={severityRisk(item.severity ?? undefined)}>
                             {severityLabel(item.severity ?? undefined)}
                           </RiskTag>

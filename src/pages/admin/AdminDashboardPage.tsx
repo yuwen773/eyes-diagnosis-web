@@ -14,7 +14,9 @@ const KPIS: {
   delta?: string
   accent?: boolean
 }[] = [
-  { label: "诊断总次数", value: "5,632", delta: "↑12.5%", accent: true },
+  // 与「数据分析」页的同一指标同一个数：两个页面各写一个数，管理员会以为
+  // 其中一个是错的。同为示例数据，至少别自相矛盾。
+  { label: "总诊断数", value: "8,452", delta: "↑12.5%", accent: true },
   { label: "用户总数", value: "1,284" },
   { label: "今日新增", value: "47" },
   { label: "知识库文件", value: "126" },
@@ -85,6 +87,10 @@ export function AdminDashboardPage(): ReactElement {
         <SectionHead code="01" kicker="仪表盘" en="ADMIN · DASHBOARD" />
         <span className="admin-sample num">示例数据 · SAMPLE</span>
       </div>
+
+      <p className="admin-sample-note">
+        本页全部为示例数据，尚未接入后端统计接口。所列数字不代表实际业务量，不可用于汇报或对外引用。
+      </p>
 
       <section className="admin-kpis" aria-label="关键指标">
         {KPIS.map((kpi) => (

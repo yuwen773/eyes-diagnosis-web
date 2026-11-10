@@ -4,7 +4,7 @@ import { ApiError, runDiagnosis, type DiagnosisResult } from "@/lib/api"
 import { CLASSES } from "@/lib/domain"
 import { useSession } from "@/lib/session"
 import { FaultNote } from "@/components/fault"
-import { faultFromError, validationFault, type Fault } from "@/lib/faults"
+import { faultFromError, infoFault, validationFault, type Fault } from "@/lib/faults"
 import { RecordSheet } from "@/components/RecordSheet"
 import { SectionHead } from "@/components/SectionHead"
 import { DisclaimerBar } from "@/components/DisclaimerBar"
@@ -108,6 +108,9 @@ export function DiagnosisPage() {
 
   const inputRef = useRef<HTMLInputElement>(null)
   const startedAt = useRef<number>(0)
+  // 本次判读的代号。每次真正发起判读就换号，回来时先核对号对不对得上：
+  // 对不上说明这次结果已经被换图或重置取代了，直接丢掉，绝不落到新的影像上。
+  const runId = useRef(0)
 
   // 本地预览用 object URL，换了文件就把旧的释放掉。
   useEffect(() => {
@@ -131,6 +134,13 @@ export function DiagnosisPage() {
 
   function accept(next: File | null) {
     if (!next) return
+    // 判读进行中不换图。在途请求的结论属于旧影像，落到新影像上就是张冠李戴，
+    // 屏幕上会出现「这张片子的诊断结论配另一张片子」。等这次结果出来再换。
+    if (stage === "running") {
+      setFault(infoFault("判读进行中，请等这次结果出来再换图"))
+      setFaultScope("slot")
+      return
+    }
     const problem = validate(next)
     if (problem) {
       setFault(validationFault(problem))
@@ -147,6 +157,7 @@ export function DiagnosisPage() {
 
   async function diagnose() {
     if (!file) return
+    const id = ++runId.current
     setStage("running")
     setFault(null)
     setNeedsLogin(false)
@@ -158,9 +169,12 @@ export function DiagnosisPage() {
       const value = await runDiagnosis(file)
       const floor = 900 - (Date.now() - startedAt.current)
       if (floor > 0) await new Promise((resolve) => window.setTimeout(resolve, floor))
+      // 号对不上：这次判读期间用户换了图或点了重置，结果已经没有归属，丢掉。
+      if (runId.current !== id) return
       setResult(value)
       setStage("done")
     } catch (cause) {
+      if (runId.current !== id) return
       setStage("error")
       setFaultScope("run")
       setNeedsLogin(cause instanceof ApiError && cause.code === 40100)
@@ -174,6 +188,8 @@ export function DiagnosisPage() {
   }
 
   function reset() {
+    // 作废在途请求：结果回来时已经没有对应的影像了。
+    runId.current += 1
     setFile(null)
     setResult(null)
     setStage("empty")
@@ -296,6 +312,7 @@ export function DiagnosisPage() {
               type="file"
               accept="image/jpeg,image/png"
               className="sr-only"
+              disabled={stage === "running"}
               onChange={(event) => accept(event.target.files?.[0] ?? null)}
             />
 

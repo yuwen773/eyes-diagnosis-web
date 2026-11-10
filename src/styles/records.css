@@ -20,7 +20,16 @@
 /* ── KPI 条 ───────────────────────────────────────────── */
 
 .records__strip {
-  margin-bottom: clamp(28px, 4vh, 44px);
+  margin-bottom: 10px;
+}
+
+/* 口径说明：总数是全量，其余三项只覆盖当前页。不写清楚，读者会把一页的风险数
+   当成名下全部风险数——那正是会让临床判断出错的读法。 */
+.records__scope {
+  margin: 0 0 clamp(20px, 3vh, 30px);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--fg-3);
 }
 
 /* ── 台账列表 ─────────────────────────────────────────── */

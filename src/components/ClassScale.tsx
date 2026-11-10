@@ -1,4 +1,5 @@
 import type { RankedClass } from "@/lib/domain"
+import { confidencePercent } from "@/lib/domain"
 import { useInView } from "@/lib/useInView"
 
 /** 八类概率：一条带刻度的横尺，而不是圆角进度条。 */
@@ -37,7 +38,7 @@ export function ClassScale({
             {row.name}
           </span>
           <span className="scale__pct" role="cell">
-            {row.probability.toFixed(2)}
+            {confidencePercent(row.probability)}
           </span>
           <span className="scale__track" role="cell" aria-hidden="true">
             <span className="scale__ticks">

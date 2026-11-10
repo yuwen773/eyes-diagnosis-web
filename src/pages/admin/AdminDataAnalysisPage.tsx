@@ -20,8 +20,11 @@ const KPIS: {
   accent?: boolean
 }[] = [
   { label: "总诊断数", value: "8,452", delta: "↑12.5%", accent: true },
-  { label: "确诊数", value: "7,891", delta: "↑8.2%" },
-  { label: "准确率", value: "98.7%", delta: "↑0.5%" },
+  { label: "给出结论数", value: "7,891", delta: "↑8.2%" },
+  // 不写准确率。本产品没有验证队列、没有参考标准，报不出一个能站住的准确率；
+  // 而且这一页连统计接口都没接，报出来的数字只是示例。医疗 AI 产品的准确率
+  // 是要被追责的读数，不能用示例数据占位。
+  { label: "准确率", value: "未评测", delta: "尚无验证集" },
   // StatTile 的 delta 是纯展示字符串，把「较上月优化」并进同一行（无独立 trendLabel 契约）。
   { label: "平均诊断速度", value: "2.3s", delta: "↓15.4% · 较上月优化" },
 ]
@@ -97,6 +100,10 @@ export function AdminDataAnalysisPage(): ReactElement {
         <SectionHead code="06" kicker="数据分析" en="ADMIN · DATA ANALYSIS" />
         <span className="admin-sample num">示例数据 · SAMPLE</span>
       </div>
+
+      <p className="admin-sample-note">
+        本页全部为示例数据，尚未接入后端统计接口。所列数字不代表实际业务量，不可用于汇报或对外引用。
+      </p>
 
       <section className="admin-kpis" aria-label="关键指标">
         {KPIS.map((kpi) => (

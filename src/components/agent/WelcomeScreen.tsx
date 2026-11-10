@@ -11,7 +11,9 @@ const HINTS = [
     icon: "image" as const,
     title: "上传眼底图像",
     desc: "发送眼底图片，AI 辅助分析",
-    action: "上传我的眼底OCT图像",
+    // 模型只认彩色眼底照片（JPEG/PNG）。OCT 是另一种成像，模型不在它的范围内，
+    // 把 OCT 写进引导语等于 inviting 用户上传一张注定读不出来的东西。
+    action: "上传我的眼底照片",
     prompt: "帮我解读这张眼底照片",
   },
   {
@@ -100,7 +102,7 @@ export function WelcomeScreen({ onSend }: { onSend: (text: string) => void }) {
 
         <div className="welcome-text">
           <h2 className="welcome-title">Iris</h2>
-          <p className="welcome-desc">上传眼底图片或描述症状，我来为您分析诊断</p>
+          <p className="welcome-desc">上传眼底图片或描述症状，我来帮你理解影像与检查结果</p>
         </div>
 
         <div className="welcome-hints">

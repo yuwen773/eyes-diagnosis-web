@@ -3438,6 +3438,31 @@ html:not(.dark) .pitch__glass.auth__glass::before {
   padding-top: 3px;
 }
 
+.recos__body {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+/* 急症建议：颜色不是唯一信号，另配一个「急」字，色觉障碍与灰度打印下也读得到。 */
+.recos li[data-urgent="true"] {
+  color: var(--risk-critical);
+}
+
+.recos li[data-urgent="true"]::before {
+  color: var(--risk-critical);
+}
+
+.recos__flag {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  padding: 0 5px;
+  color: var(--risk-critical);
+  border: 1px solid color-mix(in srgb, var(--risk-critical) 45%, transparent);
+}
+
 .notice {
   display: flex;
   align-items: flex-start;

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { SectionHead } from "@/components/SectionHead"
 import { SiteFooter } from "@/components/SiteFooter"
@@ -81,6 +81,70 @@ function DeniedPage({ anon }: { anon: boolean }) {
 }
 
 /**
+ * 会话没验成时的说明页。
+ *
+ * 与「无权限」是两件事：那边是账号不对，这边是服务没答话。
+ * 混成同一页，用户会去反复登录，而问题根本不在账号上。
+ */
+function UnavailablePage({
+  message,
+  onRetry,
+}: {
+  message: string
+  onRetry: () => void | Promise<void>
+}) {
+  const [busy, setBusy] = useState(false)
+  return (
+    <div className="is-field admin-denied">
+      <SiteHeader />
+
+      <main className="wrap admin-denied__inner">
+        <SectionHead
+          code="00"
+          kicker="系统管理 · ADMINISTRATION"
+          en="SERVICE UNAVAILABLE"
+        />
+
+        <p className="overline admin-denied__eyebrow">SERVICE ERROR</p>
+
+        <h1 className="h2 admin-denied__title">暂时核对不了访问权限</h1>
+        <p className="lead admin-denied__body">
+          {message}。这不是你的账号有问题，稍后重试即可；已经登录的会话不会被退出。
+        </p>
+
+        <div className="readout admin-denied__status">
+          <span className="readout__label">访问状态</span>
+          <span className="readout__value readout__value--mono">UNVERIFIED</span>
+        </div>
+
+        <div className="admin-denied__actions">
+          <button
+            className="btn"
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true)
+              void Promise.resolve(onRetry()).finally(() => setBusy(false))
+            }}
+          >
+            {busy ? "重试中…" : "重新核对"}
+            <span className="btn__key">RETRY</span>
+          </button>
+          <Link className="link" to="/">
+            回首页
+            <span className="link__mark">↗</span>
+          </Link>
+        </div>
+      </main>
+
+      <div className="wrap">
+        <SiteFooter />
+      </div>
+    </div>
+  )
+}
+
+/**
  * 路由守卫三分支：
  *   loading          → 读数占位，不渲染 children、不发请求
  *   authed && admin  → 放行 children
@@ -91,11 +155,14 @@ function DeniedPage({ anon }: { anon: boolean }) {
  * ?redirect= 跳登录。这里只如实说明并给出口（回首页 / 去登录）。
  */
 export function AdminGate({ children }: { children: ReactNode }) {
-  const { status, user } = useSession()
+  const { status, user, probeError, refresh } = useSession()
 
   if (status === "loading") return <LoadingState />
 
   if (status === "authed" && user?.userRole === "admin") return <>{children}</>
+
+  // 服务没答话时先说服务，别把人引去登录——那是另一件事。
+  if (probeError) return <UnavailablePage message={probeError} onRetry={() => void refresh()} />
 
   return <DeniedPage anon={status === "anon"} />
 }

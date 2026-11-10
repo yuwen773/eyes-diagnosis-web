@@ -5,8 +5,8 @@ import { ConfidenceDial } from "@/components/ConfidenceDial"
 import { RiskTag } from "@/components/RiskTag"
 import {
   classCode,
-  confidenceRisk,
-  fixed,
+  confidenceBand,
+  confidencePercent,
   formatTimestamp,
   normalizeConfidence,
   rankClasses,
@@ -15,6 +15,8 @@ import {
   severityLabel,
   severityRisk,
   shortHash,
+  TRIAGE_FALLBACK,
+  isUrgentAdvice,
 } from "@/lib/domain"
 
 type RecordSheetProps = {
@@ -37,6 +39,7 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
   const rejected = Boolean(result.aiRejected)
   const rows = rankClasses(result)
   const confidence = normalizeConfidence(result.confidence ?? result.probability)
+  const band = confidenceBand(result.confidence ?? result.probability)
   const review = reviewState(result.humanReviewStatus)
   const recos = recommendationLines(result)
   const stampRisk = severityRisk(result.severity)
@@ -81,16 +84,17 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
             ) : null}
             <div>
               <p className="overline sheet__verdict-kicker">
-                主诊断 · {classCode(result.result)}
+                AI 判读结果 · {classCode(result.result)}
               </p>
-              <h2 className="sheet__verdict">{result.result ?? "未给出主诊断"}</h2>
+              <h2 className="sheet__verdict">{result.result ?? "未给出判读结果"}</h2>
               {result.details ? <p className="sheet__note">{result.details}</p> : null}
 
               <div className="sheet__facts">
                 <div className="readout">
                   <span className="readout__label">置信度</span>
                   <span className="readout__value readout__value--mono">
-                    {fixed(confidence)}
+                    {confidencePercent(confidence)}{" "}
+                    <RiskTag risk={band.risk}>{band.label}</RiskTag>
                   </span>
                 </div>
                 <div className="readout">
@@ -117,17 +121,13 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
               </div>
             </div>
 
-            <ConfidenceDial
-              value={confidence}
-              size={104}
-              label={confidenceRisk(confidence) === "normal" ? "CONF" : "LOW CONF"}
-            />
+            <ConfidenceDial value={confidence} size={104} label="置信度" unit="CONF" />
           </div>
 
           <section className="sheet__section">
             <div className="sheet__section-head">
               <span className="overline">八类概率 · CLASS PROBABILITY</span>
-              <span className="overline">0 — 1.00</span>
+              <span className="overline">0 — 100%</span>
             </div>
             <ClassScale rows={rows} />
           </section>
@@ -139,11 +139,31 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
               </div>
               <ol className="recos">
                 {recos.map((line) => (
-                  <li key={line}>{line}</li>
+                  <li key={line} data-urgent={isUrgentAdvice(line) ? "true" : undefined}>
+                    <span className="recos__body">
+                      {isUrgentAdvice(line) ? (
+                        <span className="recos__flag">急</span>
+                      ) : null}
+                      {line}
+                    </span>
+                  </li>
                 ))}
               </ol>
             </section>
-          ) : null}
+          ) : (
+            <section className="sheet__section">
+              <div className="sheet__section-head">
+                <span className="overline">建议 · RECOMMENDATIONS</span>
+              </div>
+              <div className="notice" data-tone="attention">
+                <span className="notice__mark">提示</span>
+                <div>
+                  <p className="notice__title">本次判读未给出个体化建议</p>
+                  <p className="notice__body">{TRIAGE_FALLBACK}</p>
+                </div>
+              </div>
+            </section>
+          )}
         </>
       )}
 
