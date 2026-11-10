@@ -93,6 +93,18 @@ export function statsLabels(scope: StatsScope): {
   }
 }
 
+export type ReexamineView = "receipt" | "request" | "reviewed" | null
+
+/**
+ * 复诊区块的三态。只要记录非拒识且有复审状态就渲染——
+ * 重新打开一条「复审中」的记录也必须看到回执，不能整块消失。
+ */
+export function reexamineView(item: DiagnosisManage, reexamined: boolean): ReexamineView {
+  if (item.aiRejected || item.reexamineStatus == null) return null
+  if (reexamined || item.reexamineStatus === 2) return "receipt"
+  return item.reexamineStatus === 3 ? "reviewed" : "request"
+}
+
 /** 「已复审 / 复审完成」的记录允许再申请复诊——复审中的不重复提交。 */
 export function canRequestReexamine(item: DiagnosisManage): boolean {
   if (item.aiRejected) return false

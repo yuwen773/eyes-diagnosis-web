@@ -4,6 +4,7 @@ import {
   canRequestReexamine,
   loadMyStats,
   reexamineLabel,
+  reexamineView,
   statsLabels,
   summarizeRecords,
 } from "./records"
@@ -95,6 +96,26 @@ const mockedStats = vi.mocked(getMyStats)
 
 beforeEach(() => {
   mockedStats.mockReset()
+})
+
+describe("reexamineView", () => {
+  it("复审中显示回执，重新打开也能看到", () => {
+    expect(reexamineView(row({ reexamineStatus: 2 }), false)).toBe("receipt")
+  })
+
+  it("提交成功后的乐观态优先显示回执", () => {
+    expect(reexamineView(row({ reexamineStatus: 2 }), true)).toBe("receipt")
+  })
+
+  it("未复审与已复审都显示可申请", () => {
+    expect(reexamineView(row({ reexamineStatus: 1 }), false)).toBe("request")
+    expect(reexamineView(row({ reexamineStatus: 3 }), false)).toBe("reviewed")
+  })
+
+  it("拒识或没有复审状态时不渲染整块", () => {
+    expect(reexamineView(row({ aiRejected: true }), false)).toBeNull()
+    expect(reexamineView(row({ reexamineStatus: undefined }), false)).toBeNull()
+  })
 })
 
 describe("loadMyStats", () => {
