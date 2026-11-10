@@ -150,7 +150,7 @@
 
 .news__pager-step:hover:not(:disabled) {
   border-bottom-color: var(--signal);
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .news__pager-step:disabled {
@@ -360,7 +360,7 @@
 }
 
 .news-detail__back:hover {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .news-detail__hero {
@@ -452,7 +452,7 @@
 }
 
 .news-toc__list a:hover {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .news-toc__index {
@@ -510,7 +510,7 @@
 }
 
 .news-paper__body a {
-  color: var(--signal);
+  color: var(--signal-text);
   border-bottom: 1px solid color-mix(in srgb, var(--signal) 40%, transparent);
 }
 
@@ -551,7 +551,7 @@
 }
 
 .news-ledger__row:hover {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .news-ledger__date {

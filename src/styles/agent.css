@@ -114,7 +114,7 @@
 }
 
 .agent-msg__aiicon {
-  color: var(--signal);
+  color: var(--signal-text);
   flex-shrink: 0;
 }
 
@@ -123,7 +123,7 @@
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-msg__bubble-ai .markdown-body {
@@ -203,7 +203,7 @@
 }
 
 .markdown-body a {
-  color: var(--signal);
+  color: var(--signal-text);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -262,7 +262,7 @@
 }
 
 .markdown-body .copy-btn:hover {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .markdown-body table {
@@ -320,7 +320,7 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--signal);
+  color: var(--signal-text);
   margin-bottom: 6px;
 }
 
@@ -360,7 +360,7 @@
 
 .agent-toolcard__icon {
   display: flex;
-  color: var(--signal);
+  color: var(--signal-text);
   flex-shrink: 0;
 }
 
@@ -369,7 +369,7 @@
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--signal);
+  color: var(--signal-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -560,7 +560,7 @@
 
 .agent-msglist__unread:hover {
   border-color: var(--signal);
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 /* ── agent: 欢迎屏（排版一比一复刻 Vue 版 welcome 区，令牌换本项目） ── */
@@ -587,7 +587,7 @@
   width: 160px;
   height: 140px;
   margin-bottom: 16px;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .ev-svg {
@@ -689,7 +689,7 @@
 }
 
 .guide-card:hover .guide-arrow {
-  color: var(--signal);
+  color: var(--signal-text);
   transform: translateX(2px);
 }
 
@@ -700,7 +700,7 @@
   width: 44px;
   height: 44px;
   border: 1px solid var(--hr);
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .guide-content {
@@ -852,7 +852,7 @@
 }
 
 .agent-input__attach:hover:not(:disabled) {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-input__attach:disabled {
@@ -974,7 +974,7 @@
 
 .agent-panel__tab.is-active {
   border-color: var(--hr-strong);
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-panel__close {
@@ -1047,7 +1047,7 @@
 }
 
 .agent-panel__link a:hover .agent-panel__linktitle {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-panel__linkdomain {
@@ -1139,7 +1139,7 @@
 }
 
 .agent-sessions__select.is-active {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 /* 「新对话」主钮（同 Vue 版 new-chat-btn：＋图标 + 文字、10px 圆角描边） */
@@ -1163,7 +1163,7 @@
 
 .agent-sessions__newchat:hover:not(:disabled) {
   border-color: var(--signal);
-  color: var(--signal);
+  color: var(--signal-text);
   background: var(--signal-soft);
 }
 
@@ -1243,7 +1243,7 @@
 }
 
 .agent-session.is-active .agent-session__title {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-session__meta {
@@ -1313,7 +1313,7 @@
 }
 
 .agent-session__menu button.is-danger {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-session__rename {
@@ -1415,7 +1415,7 @@
 }
 
 .agent-collapsed-actions__btn.is-accent:hover {
-  color: var(--signal);
+  color: var(--signal-text);
   border-color: var(--signal);
 }
 
@@ -1443,7 +1443,7 @@
 }
 
 .agent-main__resource-toggle.is-active {
-  color: var(--signal);
+  color: var(--signal-text);
   border-color: var(--signal);
   background: var(--signal-soft);
 }

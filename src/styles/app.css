@@ -333,7 +333,7 @@ a:hover .wordmark__iris {
 }
 
 .nav__link[aria-current="page"] .nav__code {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .nav__link[aria-current="page"]::after {
@@ -734,7 +734,7 @@ a.acct__trigger--anon:hover {
 }
 
 .site-foot__nav-link:hover .site-foot__nav-code {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 /* 免责栏：法定文本独立成段，右端盖一枚描边章。 */
@@ -771,7 +771,7 @@ a.acct__trigger--anon:hover {
   flex: none;
   padding: 8px 12px;
   border: 1.5px solid var(--signal);
-  color: var(--signal);
+  color: var(--signal-text);
   font-size: 9.5px;
   letter-spacing: 0.16em;
   line-height: 1.65;
@@ -1058,7 +1058,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .hero__masthead span:last-child {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .hero__copy {
@@ -1230,7 +1230,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 
 .index__row:hover .index__code,
 .index__row:hover .index__rate {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .index__code {
@@ -1442,7 +1442,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .ledger__row:hover .ledger__index {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .ledger__title {
@@ -1473,7 +1473,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .ledger__row:hover .ledger__readout {
-  color: var(--signal);
+  color: var(--signal-text);
   border-color: var(--signal);
 }
 
@@ -1651,7 +1651,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .composer__icon:hover {
-  color: var(--signal);
+  color: var(--signal-text);
   border-color: var(--signal);
 }
 
@@ -1745,7 +1745,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 .deck__index {
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .deck__name {
@@ -1812,7 +1812,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .screen__eye {
-  color: var(--signal);
+  color: var(--signal-text);
   opacity: 0.9;
 }
 
@@ -1914,7 +1914,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 .msg__tool {
   font-size: 14px;
   letter-spacing: 0.03em;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .msg__args {
@@ -1983,7 +1983,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 
 .hits__rank {
   font-size: 11.5px;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .hits__title {
@@ -2030,7 +2030,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 .agent-points__code {
   font-size: 10px;
   letter-spacing: 0.14em;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .agent-points__title {
@@ -2079,7 +2079,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
   font-family: var(--font-mono);
   font-size: 9.5px;
   letter-spacing: 0.14em;
-  color: var(--signal);
+  color: var(--signal-text);
   white-space: nowrap;
 }
 
@@ -2263,7 +2263,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
   margin-top: auto;
   padding: 14px 18px;
   border: 2px solid var(--signal);
-  color: var(--signal);
+  color: var(--signal-text);
   font-size: 11px;
   letter-spacing: 0.18em;
   line-height: 1.7;
@@ -2291,7 +2291,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
   padding-top: 4px;
   font-size: 11px;
   letter-spacing: 0.16em;
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .statute__name {
@@ -2842,7 +2842,7 @@ html:not(.dark) .pitch__glass.auth__glass::before {
 }
 
 .proc__state[data-state="running"] {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .proc__state[data-state="running"]::before {

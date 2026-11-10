@@ -76,7 +76,7 @@
 }
 
 .records__row:hover .records__index {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 /* 缩略影像：发丝线框，装不下时就摆一块「无影像」的读数。 */
@@ -160,7 +160,7 @@
 
 .records__row:hover .records__caret,
 .records__row[aria-expanded="true"] .records__caret {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 /* 展开区：记录纸在台账里要缩进出一圈呼吸位。 */
