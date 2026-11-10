@@ -72,7 +72,7 @@ export function AgentScreenDeck({ dark }: { dark: boolean }) {
                 </ul>
               </div>
               <footer className="screen__foot num">
-                8 类眼底改变 · 质量门 · 医生复核
+                8 类眼底改变 · 质量门 · 人工复核
               </footer>
             </div>
           </Card>

@@ -64,7 +64,7 @@ const STEPS = [
   {
     code: "04",
     title: "进入复核",
-    body: "可疑病例进入医生复核队列，签字之后，这条记录才可被引用。",
+    body: "可疑病例进入人工复核队列，签字之后，这条记录才可被引用。",
     readout: "SIGN-OFF · 待签字",
   },
 ]
@@ -248,7 +248,7 @@ export function LandingPage() {
 
               <p className="lead hero__lead rise" style={{ "--d": "640ms" } as CSSProperties}>
                 上传一张彩色眼底照片，模型给出八类常见眼底改变的判读。质量不足时主动拒识，
-                可疑病例转入医生复核队列——判读之后，还可以和诊断 Agent 接着聊。
+                可疑病例转入人工复核队列——判读之后，还可以和诊断 Agent 接着聊。
               </p>
 
               <div className="hero__actions rise" style={{ "--d": "760ms" } as CSSProperties}>
