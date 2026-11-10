@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { ApiError, runDiagnosis, type DiagnosisResult } from "@/lib/api"
 import { CLASSES } from "@/lib/domain"
 import { useSession } from "@/lib/session"
+import { rememberPendingUpload, takePendingUpload } from "@/lib/pendingUpload"
 import { FaultNote } from "@/components/fault"
 import { faultFromError, infoFault, validationFault, type Fault } from "@/lib/faults"
 import { RecordSheet } from "@/components/RecordSheet"
@@ -94,12 +95,19 @@ export function DiagnosisPage() {
   const { status } = useSession()
   const navigate = useNavigate()
 
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [stage, setStage] = useState<Stage>("empty")
+  // 未登录上传被送去登录页时暂存的影像；回来时一次取出，不留在本机。
+  const [restored] = useState(() => takePendingUpload())
+  const [file, setFile] = useState<File | null>(restored)
+  const [preview, setPreview] = useState<string | null>(() =>
+    restored ? URL.createObjectURL(restored) : null,
+  )
+  const previewRef = useRef<string | null>(preview)
+  const [stage, setStage] = useState<Stage>(restored ? "ready" : "empty")
   // 故障只有一份：要么是这张图没通过检查（贴槽位），
   // 要么是这次判读没成（给重试）。
-  const [fault, setFault] = useState<Fault | null>(null)
+  const [fault, setFault] = useState<Fault | null>(() =>
+    restored ? infoFault("已为你保留上次选择的影像，继续判读即可") : null,
+  )
   const [faultScope, setFaultScope] = useState<"slot" | "run">("slot")
   const [needsLogin, setNeedsLogin] = useState(false)
   const [result, setResult] = useState<DiagnosisResult | null>(null)
@@ -112,16 +120,12 @@ export function DiagnosisPage() {
   // 对不上说明这次结果已经被换图或重置取代了，直接丢掉，绝不落到新的影像上。
   const runId = useRef(0)
 
-  // 本地预览用 object URL，换了文件就把旧的释放掉。
+  // 本地预览的 object URL 在换图/重置时手动释放；卸载时兜底清理一次。
   useEffect(() => {
-    if (!file) {
-      setPreview(null)
-      return
+    return () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current)
     }
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+  }, [])
 
   // 计时器：只显示真实等待时长，不做进度假动作。
   useEffect(() => {
@@ -151,6 +155,10 @@ export function DiagnosisPage() {
     setFault(null)
     setNeedsLogin(false)
     setResult(null)
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    const url = URL.createObjectURL(next)
+    previewRef.current = url
+    setPreview(url)
     setFile(next)
     setStage("ready")
   }
@@ -177,7 +185,10 @@ export function DiagnosisPage() {
       if (runId.current !== id) return
       setStage("error")
       setFaultScope("run")
-      setNeedsLogin(cause instanceof ApiError && cause.code === 40100)
+      const loginRequired = cause instanceof ApiError && cause.code === 40100
+      setNeedsLogin(loginRequired)
+      // 路由层马上会送去登录页；先把影像暂存，回来还能接着判读。
+      if (loginRequired) rememberPendingUpload(file)
       setFault(
         faultFromError(cause, {
           intent: "load",
@@ -190,6 +201,9 @@ export function DiagnosisPage() {
   function reset() {
     // 作废在途请求：结果回来时已经没有对应的影像了。
     runId.current += 1
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    previewRef.current = null
+    setPreview(null)
     setFile(null)
     setResult(null)
     setStage("empty")
