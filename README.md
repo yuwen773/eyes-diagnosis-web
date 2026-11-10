@@ -12,10 +12,11 @@ npm run dev        # http://localhost:5173，代理 /api 到 :8081
 
 ## 验证
 
-- `npm run typecheck` 类型检查
+- `npm run typecheck` 类型检查（`tsc -b`）
 - `npm run test` 单元测试（Vitest）
 - `npm run build` 生产构建
-- `npm run lint` ESLint（B3 起为硬门）
+- `npm run lint` ESLint（CI 硬门）
+- `npm run test:e2e` 真实后端冒烟（手动跑，说明见 [`e2e/README.md`](e2e/README.md)）
 
 CI 在 `master` 的 push 与 PR 上跑以上命令。master 要求 PR + CI 通过。
 
