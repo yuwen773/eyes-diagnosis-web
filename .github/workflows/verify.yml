@@ -1,10 +1,11 @@
 name: verify
 
 on:
+  # 所有分支推送 + 所有 PR 都跑：master 的硬门靠分支保护（要求 PR + verify 通过），
+  # 其余分支上的运行是为了让评审看得到信号，也为了能验证「CI 确实能拦住类型错误」。
   push:
-    branches: [master]
+    branches: ["**"]
   pull_request:
-    branches: [master]
 
 jobs:
   verify:
