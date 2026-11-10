@@ -57,6 +57,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
   }
 })
 
+const originalRandomUUID = globalThis.crypto.randomUUID
+
 afterEach(() => {
   cleanup()
   sessionState.status = "anon"
@@ -64,6 +66,10 @@ afterEach(() => {
   localStorage.clear()
   vi.mocked(getSessions).mockResolvedValue([])
   vi.mocked(getChatHistory).mockReset()
+  Object.defineProperty(globalThis.crypto, "randomUUID", {
+    value: originalRandomUUID,
+    configurable: true,
+  })
 })
 
 /** jsdom 没有 matchMedia——主题探测要用。 */
@@ -182,6 +188,35 @@ describe("AgentPage 未登录", () => {
     await act(async () => historyA.resolve(history("A 的旧消息")))
     expect(screen.queryByText("A 的旧消息")).toBeNull()
     expect(screen.getByText("B 的新消息")).toBeTruthy()
+  })
+
+  it("非安全上下文没有 crypto.randomUUID 时也能发送", async () => {
+    sessionState.status = "authed"
+    sessionState.user = { id: 1, userAccount: "tester" }
+    // 内网 http 部署下 crypto.randomUUID 不存在——发消息不能因此崩掉。
+    Object.defineProperty(globalThis.crypto, "randomUUID", {
+      value: undefined,
+      configurable: true,
+    })
+    stubMatchMedia()
+
+    render(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={["/agent"]}>
+          <Routes>
+            <Route path="/agent" element={<AgentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+
+    const textarea = (await screen.findByPlaceholderText(
+      /Enter 发送/,
+    )) as HTMLTextAreaElement
+    fireEvent.change(textarea, { target: { value: "没有 randomUUID" } })
+    fireEvent.keyDown(textarea, { key: "Enter" })
+
+    await waitFor(() => expect(sendMock).toHaveBeenCalledTimes(1))
   })
 
   it("发送失败时撤回乐观消息，输入框保留原文", async () => {

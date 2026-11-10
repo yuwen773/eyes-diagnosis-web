@@ -1,17 +1,18 @@
 import DOMPurify from "dompurify"
 
 /**
- * 正文净化。
+ * 放行排版需要的标签与属性。
  *
- * 资讯正文是编辑部存的富文本，直接 dangerouslySetInnerHTML 就是把后端
- * 当成可信来源。这里只放行排版需要的标签与属性，外链一律新开并带
- * noopener，其余一律丢掉。
+ * 白名单里含 h1 / pre / code / table 一族：正文现在由 Markdown 渲染而来，
+ * 这些结构是正文的一部分，剥掉等于把编辑部写的内容删了。
+ * 外链一律新开并带 noopener，其余一律丢掉。
  */
 
 const ALLOWED_TAGS = [
   "p",
   "br",
   "hr",
+  "h1",
   "h2",
   "h3",
   "h4",
@@ -21,17 +22,26 @@ const ALLOWED_TAGS = [
   "i",
   "u",
   "s",
+  "del",
   "ul",
   "ol",
   "li",
   "a",
   "img",
   "blockquote",
+  "pre",
+  "code",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td",
   "span",
   "div",
 ]
 
-const ALLOWED_ATTR = ["href", "src", "alt", "title"]
+const ALLOWED_ATTR = ["href", "src", "alt", "title", "class", "colspan", "rowspan", "start"]
 
 let hooked = false
 

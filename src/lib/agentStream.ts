@@ -223,6 +223,9 @@ export function useAgentStream() {
   // 句柄带令牌：旧流收尾时新流可能已经建立，不能按「当前句柄」一把清。
   const abortRef = useRef<{ token: number; controller: AbortController } | null>(null)
   const streamSeq = useRef(0)
+  // 事件闸门：中止/切会话后，在途流送来的事件一律不算数。
+  // 与 streamSeq 分开：闸门只拦事件，不拦收尾清理（中止后仍要收掉光标）。
+  const eventSeq = useRef(0)
 
   useEffect(
     () => () => {
@@ -237,6 +240,7 @@ export function useAgentStream() {
     async (message: string, threadId: string, urls: string[] = []) => {
       setIsStreaming(true)
       const token = ++streamSeq.current
+      const eventToken = eventSeq.current
       const controller = new AbortController()
       abortRef.current = { token, controller }
 
@@ -256,7 +260,7 @@ export function useAgentStream() {
           },
           {
             onEvent(dto) {
-              if (!isCurrent()) return
+              if (eventToken !== eventSeq.current) return
               setMessages((prev) => applyStreamEvent(prev, dto))
               if ((dto.messageType ?? "").toLowerCase() === "tool-response") {
                 setResources((prev) => extractResources(dto.content ?? "", prev))
@@ -290,6 +294,8 @@ export function useAgentStream() {
   )
 
   const abort = useCallback(() => {
+    // 闸门递增：被中止的流随后送来的事件不算数（收尾清理照旧）。
+    eventSeq.current += 1
     abortRef.current?.controller.abort()
     abortRef.current = null
     setIsStreaming(false)
@@ -305,7 +311,9 @@ export function useAgentStream() {
   }, [])
 
   const reset = useCallback(() => {
-    // 切会话/新建会话必须先中断在途 SSE——否则旧回合的 token 会继续写进新会话
+    // 切会话/新建会话必须先中断在途 SSE——否则旧回合的 token 会继续写进新会话。
+    // 闸门一并递增：旧流在中断之后才送来的事件，一律不算数。
+    eventSeq.current += 1
     abortRef.current?.controller.abort()
     abortRef.current = null
     setIsStreaming(false)

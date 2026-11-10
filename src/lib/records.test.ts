@@ -150,6 +150,41 @@ describe("loadMyStats", () => {
     mockedStats.mockRejectedValueOnce(new ApiError(-1, "网络不可用"))
     await expect(loadMyStats([], 0)).resolves.toMatchObject({ scope: "page" })
   })
+
+  it("服务端返回空对象时降级到本页口径（不冒充全量）", async () => {
+    mockedStats.mockResolvedValueOnce({} as never)
+    const result = await loadMyStats([row({ severity: "severe" })], 37)
+    expect(result.scope).toBe("page")
+    expect(result.stats.highRisk).toBe(1)
+  })
+
+  it("服务端返回 null 时降级到本页口径", async () => {
+    mockedStats.mockResolvedValueOnce(null as never)
+    const result = await loadMyStats([], 0)
+    expect(result.scope).toBe("page")
+    expect(result.stats.total).toBe(0)
+  })
+
+  it("字段缺一（缺 highRisk）时降级到本页口径", async () => {
+    mockedStats.mockResolvedValueOnce({
+      total: 128,
+      awaitingReview: 12,
+      lastReadAt: null,
+    } as never)
+    const result = await loadMyStats([], 0)
+    expect(result.scope).toBe("page")
+  })
+
+  it("数值字段不是有限数字时降级到本页口径", async () => {
+    mockedStats.mockResolvedValueOnce({
+      total: "128",
+      highRisk: 9,
+      awaitingReview: 12,
+      lastReadAt: null,
+    } as never)
+    const result = await loadMyStats([], 0)
+    expect(result.scope).toBe("page")
+  })
 })
 
 describe("statsLabels", () => {

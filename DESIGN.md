@@ -14,6 +14,8 @@
 1. **品牌强调色是信号橙 `--signal: #d9541f`**（暗底 `#ef7a45`）。
    它**不是主 CTA 色**：`.btn` 的底是墨色 `--ink`。橙色只做当前态、聚焦边框、
    模型标记、图表 top 条、链接强调——不做大面积填充。
+   **承载文字时用 `--signal-text`**（纸面 `#bd4515`，暗底 `#ef7a45`）：
+   `--signal` 的对比度不够做正文色。
 2. **严重度与品牌解耦**：`--risk-normal / attention / critical`，且永远同时给文字标签
    （`RiskTag`）。颜色不是唯一信息载体。
 3. **一切数字用 `--font-mono` + `tabular-nums`**：置信度、概率、计数、耗时、时间戳、哈希。
@@ -35,7 +37,12 @@
 
 `DESIGN.md` §12 有完整清单。改到这些地方时顺手修，不要照着复刻：
 
-- `--fg-3` 在浅底上约 2.89:1，不到 AA；
 - Tailwind v4 的 `.overline` 工具类给眉线多加一条上划线；
-- 上下文令牌没在 `:root` 兜底，上下文外的组件（`FaultToaster`）会回退 `currentColor`；
-- 多处 `outline: none` 压掉了全局 `:focus-visible`。
+- 上下文令牌没在 `:root` 兜底，上下文外的组件（`FaultToaster`）会回退 `currentColor`。
+
+2026-11-10 验收批次已修掉的（别再当成债，也别照着复刻旧写法）：
+
+- 正文三级色曾只有 2.89:1——现已提到 4.5:1（`--paper-ink-3: #676e72`，
+  `--on-dark-3: #8d948f`）；
+- 模块级 `outline: none` 曾压掉全局 `:focus-visible`——已全部移除；
+- 橙色文字改走 `--signal-text`（纸面 `#bd4515`），`--signal` 只做标记与边框。

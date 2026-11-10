@@ -59,16 +59,39 @@ export type ScopedStats = {
 /**
  * 服务端聚合优先。任何失败（404 未实现、5xx、网络）都降级到当前页，
  * 并把口径标成 page——页面据此写明「本页」，不会把一页的数字冒充全量。
+ *
+ * 200 但载荷不对（空对象、null、缺字段、类型不对）同样降级：
+ * 空 KPI 配「高风险」这种全量标签，比报错更糟。
  */
 export async function loadMyStats(
   records: DiagnosisManage[],
   total: number,
 ): Promise<ScopedStats> {
+  const fallback = (): ScopedStats => ({
+    stats: summarizeRecords(records, total),
+    scope: "page",
+  })
   try {
-    return { stats: await getMyStats(), scope: "all" }
+    const stats = await getMyStats()
+    if (!isStatsPayload(stats)) return fallback()
+    return { stats, scope: "all" }
   } catch {
-    return { stats: summarizeRecords(records, total), scope: "page" }
+    return fallback()
   }
+}
+
+/** 聚合载荷的形状校验：四个字段齐全且类型正确。 */
+function isStatsPayload(value: unknown): value is RecordStats {
+  if (!value || typeof value !== "object") return false
+  const payload = value as Record<string, unknown>
+  const isCount = (n: unknown): n is number =>
+    typeof n === "number" && Number.isFinite(n) && n >= 0
+  return (
+    isCount(payload.total) &&
+    isCount(payload.highRisk) &&
+    isCount(payload.awaitingReview) &&
+    (payload.lastReadAt === null || typeof payload.lastReadAt === "string")
+  )
 }
 
 export function statsLabels(scope: StatsScope): {

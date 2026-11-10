@@ -1,5 +1,6 @@
 import MarkdownIt from "markdown-it"
 import hljs from "highlight.js"
+import { sanitizeNewsHtml } from "./sanitize"
 
 // 图表代码块语言列表
 export const DIAGRAM_LANGUAGES = ["mermaid", "drawio", "plantuml"]
@@ -41,4 +42,24 @@ const md = new MarkdownIt({
 export function renderMarkdown(content: string): string {
   if (!content) return ""
   return md.render(content)
+}
+
+/**
+ * 资讯用的渲染器：不做语法高亮与「复制」按钮那套仪器外壳——
+ * 公开页的净化白名单里没有 button，正文里留下一个死按钮比没有更糟。
+ * 结构（标题、代码块、表格）与正文一致，净化后仍然成立。
+ */
+const mdNews = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true,
+})
+
+/**
+ * 资讯正文：编辑页预览、落库内容、公开页显示走同一条管线。
+ * 公开页还会再净化一次（后端存的也可能是旧 HTML），净化是幂等的。
+ */
+export function renderNewsHtml(content: string): string {
+  if (!content) return ""
+  return sanitizeNewsHtml(mdNews.render(content))
 }
