@@ -5,6 +5,7 @@
  * 前端算比后端再加聚合接口划算，且不用动后端契约。
  */
 
+import { getMyStats } from "./api"
 import type { DiagnosisManage } from "./api"
 
 export type RecordStats = {
@@ -45,6 +46,51 @@ export function summarizeRecords(
   }, null)
 
   return { total, highRisk, awaitingReview, lastReadAt }
+}
+
+/** 统计口径：all = 服务端全量聚合；page = 当前页本地汇总。 */
+export type StatsScope = "all" | "page"
+
+export type ScopedStats = {
+  stats: RecordStats
+  scope: StatsScope
+}
+
+/**
+ * 服务端聚合优先。任何失败（404 未实现、5xx、网络）都降级到当前页，
+ * 并把口径标成 page——页面据此写明「本页」，不会把一页的数字冒充全量。
+ */
+export async function loadMyStats(
+  records: DiagnosisManage[],
+  total: number,
+): Promise<ScopedStats> {
+  try {
+    return { stats: await getMyStats(), scope: "all" }
+  } catch {
+    return { stats: summarizeRecords(records, total), scope: "page" }
+  }
+}
+
+export function statsLabels(scope: StatsScope): {
+  total: string
+  highRisk: string
+  awaitingReview: string
+  lastReadAt: string
+} {
+  if (scope === "all") {
+    return {
+      total: "判读总数 · TOTAL",
+      highRisk: "高风险 · SEVERE",
+      awaitingReview: "待人工复核 · REVIEW",
+      lastReadAt: "最近判读 · LAST",
+    }
+  }
+  return {
+    total: "判读总数 · TOTAL",
+    highRisk: "本页高风险 · SEVERE",
+    awaitingReview: "本页待人工复核 · REVIEW",
+    lastReadAt: "本页最近 · LAST",
+  }
 }
 
 /** 「已复审 / 复审完成」的记录允许再申请复诊——复审中的不重复提交。 */

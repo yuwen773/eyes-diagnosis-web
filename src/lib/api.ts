@@ -419,6 +419,18 @@ export function listMyDiagnoses(
   }).then(toPage)
 }
 
+export type MyDiagnosisStats = {
+  total: number
+  highRisk: number
+  awaitingReview: number
+  lastReadAt: string | null
+}
+
+/** 服务端聚合。接口未上线时返回 404，调用方据此降级到当前页口径。 */
+export function getMyStats() {
+  return request<MyDiagnosisStats>("/diagnosis/stats/my", { method: "GET" })
+}
+
 /** 本人判读详情（后端做归属校验）。返回完整记录纸字段。 */
 export function getMyDiagnosis(id: string | number) {
   return request<DiagnosisResult>(`/diagnosis/get/${id}`, { method: "GET" })
