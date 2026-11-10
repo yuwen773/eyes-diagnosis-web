@@ -19,7 +19,7 @@ export function ChatInput({
 }: {
   disabled: boolean
   streaming: boolean
-  onSend: (text: string, files: File[]) => void
+  onSend: (text: string, files: File[]) => Promise<boolean>
   onStop: () => void
 }) {
   const [text, setText] = useState("")
@@ -58,7 +58,7 @@ export function ChatInput({
     }
   }, [])
 
-  function submit() {
+  async function submit() {
     const trimmed = text.trim()
     if ((!trimmed && attachments.length === 0) || disabled) return
     // 助手还在回复时不要把输入吞掉——保留文字并给出提示
@@ -66,7 +66,13 @@ export function ChatInput({
       setHint("助手正在回复，完成后即可发送")
       return
     }
-    onSend(trimmed, attachments.map((a) => a.file))
+    const ok = await onSend(trimmed, attachments.map((a) => a.file))
+    if (!ok) {
+      setHint("发送没成功，内容已保留，可以重试")
+      textareaRef.current?.focus()
+      return
+    }
+    attachments.forEach((a) => URL.revokeObjectURL(a.url))
     updateText("")
     setAttachments([])
     setHint("")
@@ -78,7 +84,7 @@ export function ChatInput({
     // 中文输入法组字确认的 Enter 不发送
     if (e.nativeEvent.isComposing) return
     e.preventDefault()
-    submit()
+    void submit()
   }
 
   function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {

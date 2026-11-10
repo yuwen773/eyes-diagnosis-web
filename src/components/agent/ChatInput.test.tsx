@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from "vitest"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { ChatInput } from "@/components/agent/ChatInput"
 
 afterEach(() => {
@@ -9,8 +9,8 @@ afterEach(() => {
   sessionStorage.clear()
 })
 
-function setup(streaming: boolean) {
-  const onSend = vi.fn()
+function setup(streaming: boolean, sent = true) {
+  const onSend = vi.fn().mockResolvedValue(sent)
   const onStop = vi.fn()
   render(
     <ChatInput
@@ -33,14 +33,24 @@ describe("ChatInput", () => {
     expect((textarea as HTMLTextAreaElement).value).toBe("追问一句")
   })
 
-  it("非流式时 Enter 发送并清空", () => {
+  it("非流式时 Enter 发送并清空", async () => {
     const { onSend, textarea } = setup(false)
     fireEvent.change(textarea, { target: { value: "你好" } })
     fireEvent.keyDown(textarea, { key: "Enter" })
 
+    await waitFor(() => expect(textarea.value).toBe(""))
     expect(onSend).toHaveBeenCalledTimes(1)
     expect(onSend.mock.calls[0][0]).toBe("你好")
-    expect(textarea.value).toBe("")
+  })
+
+  it("发送失败时保留文字与附件，草稿不清", async () => {
+    const { onSend, textarea } = setup(false, false)
+    fireEvent.change(textarea, { target: { value: "别丢我" } })
+    fireEvent.keyDown(textarea, { key: "Enter" })
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1))
+    expect(textarea.value).toBe("别丢我")
+    expect(screen.getByText("发送没成功，内容已保留，可以重试")).toBeTruthy()
   })
 
   it("中文输入法组字中的 Enter 不发送", () => {
