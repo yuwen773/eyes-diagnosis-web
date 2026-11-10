@@ -1,21 +1,23 @@
-# React + TypeScript + Vite + shadcn/ui
+# Iris · 产品前端
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+眼底影像判读系统的 Web 前端：React 19 + TypeScript + Vite + Tailwind v4。
+设计系统见 `DESIGN.md`，令牌真源是 `src/styles/tokens.css`。
 
-## Adding components
-
-To add components to your app, run the following command:
+## 开发
 
 ```bash
-npx shadcn@latest add button
+npm install
+npm run dev        # http://localhost:5173，代理 /api 到 :8081
 ```
 
-This will place the ui components in the `src/components` directory.
+## 验证
 
-## Using components
+- `npm run typecheck` 类型检查
+- `npm run test` 单元测试（Vitest）
+- `npm run build` 生产构建
+- `npm run lint` ESLint（B3 起为硬门）
 
-To use the components in your app, import them as follows:
+CI 在所有分支推送与所有 PR 上跑以上命令；`master` 要求 PR + CI 通过才能合入。
 
-```tsx
-import { Button } from "@/components/ui/button"
-```
+详细验收计划见
+`docs/superpowers/specs/2026-11-10-web-acceptance-remediation-design.md`。

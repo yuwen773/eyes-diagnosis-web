@@ -1,0 +1,25 @@
+name: verify
+
+on:
+  # 所有分支推送 + 所有 PR 都跑：master 的硬门靠分支保护（要求 PR + verify 通过），
+  # 其余分支上的运行是为了让评审看得到信号，也为了能验证「CI 确实能拦住类型错误」。
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      # B3 结束前 lint 只报警不拦合；Task 14 会删掉 continue-on-error。
+      - run: npm run lint
+        continue-on-error: true
