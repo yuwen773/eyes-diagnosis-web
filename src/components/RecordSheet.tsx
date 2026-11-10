@@ -124,6 +124,38 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
             <ConfidenceDial value={confidence} size={104} label="置信度" unit="CONF" />
           </div>
 
+          {result.humanResult ? (
+            <section className="sheet__section" data-review="human">
+              <div className="sheet__section-head">
+                <span className="overline">人工复核结论 · HUMAN REVIEW</span>
+                {result.humanSeverity ? (
+                  <span className="overline">
+                    严重程度 ·{" "}
+                    <RiskTag risk={severityRisk(result.humanSeverity)}>
+                      {severityLabel(result.humanSeverity)}
+                    </RiskTag>
+                  </span>
+                ) : null}
+              </div>
+              <p className="sheet__verdict">{result.humanResult}</p>
+              {result.humanRecommendations ? (
+                <ol className="recos">
+                  {result.humanRecommendations
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((line) => (
+                      <li key={line}>
+                        <span className="recos__body">{line}</span>
+                      </li>
+                    ))}
+                </ol>
+              ) : null}
+              {result.humanReviewNote ? (
+                <p className="sheet__note">{result.humanReviewNote}</p>
+              ) : null}
+            </section>
+          ) : null}
+
           <section className="sheet__section">
             <div className="sheet__section-head">
               <span className="overline">八类概率 · CLASS PROBABILITY</span>
@@ -174,7 +206,7 @@ export function RecordSheet({ result, recordId, actions, specimen = false, image
             <div>
               <p className="notice__title">AI 初步判读待人工复核</p>
               <p className="notice__body">
-                该记录已进入医生复核队列，签字前不得作为诊疗依据引用。
+                该记录已进入人工复核队列，签字前不得作为诊疗依据引用。
               </p>
             </div>
           </div>
