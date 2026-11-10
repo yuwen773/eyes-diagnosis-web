@@ -5,7 +5,7 @@
  * tool-request/tool-response/tool-confirm 都截断累加回合。tool-confirm 是
  * 信息性终点卡——后端图中断后流即结束，没有确认回传端点。
  */
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react"
 import { streamChat, type AgentStreamDTO, type HistoryMessageVO } from "./api"
 import { extractResources, type AgentResources } from "./agentResources"
 
@@ -305,8 +305,8 @@ export function useAgentStream() {
     setMessages((prev) => [...prev, msg])
   }, [])
 
-  /** 历史加载用：整表替换消息。 */
-  const setMessagesAll = useCallback((msgs: StreamMessage[]) => {
+  /** 历史加载/撤回用：整表替换消息，也接受更新函数。 */
+  const setMessagesAll = useCallback((msgs: SetStateAction<StreamMessage[]>) => {
     setMessages(msgs)
   }, [])
 
