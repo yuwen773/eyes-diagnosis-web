@@ -18,7 +18,7 @@ npm run dev        # http://localhost:5173，代理 /api 到 :8081
 - `npm run lint` ESLint（CI 硬门）
 - `npm run test:e2e` 真实后端冒烟（手动跑，说明见 [`e2e/README.md`](e2e/README.md)）
 
-CI 在 `master` 的 push 与 PR 上跑以上命令。master 要求 PR + CI 通过。
+CI 在所有分支推送与所有 PR 上跑以上命令；`master` 要求 PR + CI 通过才能合入。
 
 详细验收计划见
 `docs/superpowers/specs/2026-11-10-web-acceptance-remediation-design.md`。
