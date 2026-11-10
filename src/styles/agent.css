@@ -875,10 +875,6 @@
   min-height: 24px;
 }
 
-.agent-input__textarea:focus {
-  outline: none;
-}
-
 .agent-input__textarea::placeholder {
   color: var(--fg-3);
   opacity: 0.8;
@@ -1323,10 +1319,6 @@
   background: var(--bg);
   color: var(--fg);
   font-size: 12.5px;
-}
-
-.agent-session__rename:focus {
-  outline: none;
 }
 
 /* ── agent: 页面布局（同 Vue 版：无页脚、无版心，三栏铺满顶栏以下视口）── */
