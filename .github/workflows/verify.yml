@@ -19,6 +19,4 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
-      # B3 结束前 lint 只报警不拦合；Task 14 会删掉 continue-on-error。
       - run: npm run lint
-        continue-on-error: true

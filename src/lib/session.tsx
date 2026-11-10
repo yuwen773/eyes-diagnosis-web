@@ -63,7 +63,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    void refresh()
+    // refresh 的首个操作是 await 网络请求，状态更新不在 effect 同步阶段。
+    void (async () => {
+      await refresh()
+    })()
   }, [refresh])
 
   const signIn = useCallback(async (account: string, password: string) => {

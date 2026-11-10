@@ -76,7 +76,7 @@ export function RecordsPage() {
     return () => {
       alive = false
     }
-  }, [requestKey])
+  }, [requestKey, page])
 
   const loading = list.key !== requestKey
   const fault = list.key === requestKey ? list.fault : null

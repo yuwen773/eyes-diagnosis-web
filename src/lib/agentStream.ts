@@ -103,7 +103,7 @@ export function applyStreamEvent(
       const out = truncate(msgs)
       for (const tc of dto.toolCalls ?? []) {
         const name = tc.name || "工具"
-        let parsedArgs: Record<string, unknown> = {}
+        let parsedArgs: Record<string, unknown>
         try {
           parsedArgs = JSON.parse(tc.arguments || "{}")
         } catch {

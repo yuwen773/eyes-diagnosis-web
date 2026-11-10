@@ -8,14 +8,11 @@ export function useInView<T extends Element>(
   rootMargin = "0px 0px -8% 0px",
 ): [RefCallback<T | null>, boolean] {
   const [node, setNode] = useState<T | null>(null)
-  const [inView, setInView] = useState(false)
+  // 没有 IntersectionObserver 的环境（测试 / 老浏览器）直接视为可见。
+  const [inView, setInView] = useState(() => typeof IntersectionObserver === "undefined")
 
   useEffect(() => {
-    if (!node) return
-    if (typeof IntersectionObserver === "undefined") {
-      setInView(true)
-      return
-    }
+    if (!node || inView) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -27,7 +24,7 @@ export function useInView<T extends Element>(
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [node, rootMargin])
+  }, [node, rootMargin, inView])
 
   return [setNode, inView]
 }

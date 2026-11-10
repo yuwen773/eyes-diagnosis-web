@@ -115,6 +115,7 @@ export function AgentPage() {
   const loadHistoryMessages = useCallback(
     async (id: string) => {
       const seq = ++historySeq.current
+      // 加载态在发起请求的那一刻置位；调用方是事件处理器或初始化 effect。
       setHistoryLoading(true)
       try {
         const data = await getChatHistory(id, undefined, HISTORY_PAGE_SIZE)
@@ -141,6 +142,8 @@ export function AgentPage() {
       reset()
     }
     const savedThreadId = loadThreadId(userKey)
+    // refreshSessions 的首个操作是 await getSessions()，状态更新不在 effect 同步阶段。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshSessions()
     if (savedThreadId) {
       void loadHistoryMessages(savedThreadId)
@@ -206,7 +209,7 @@ export function AgentPage() {
         return false
       }
     },
-    [isStreaming, messages.length, threadId, userKey, uploader, pushUser, send, refreshSessions, pushFault],
+    [isStreaming, messages.length, threadId, userKey, uploader, pushUser, send, setMessages, refreshSessions, pushFault],
   )
 
   const handleNewChat = useCallback(() => {

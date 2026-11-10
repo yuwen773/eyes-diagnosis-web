@@ -94,9 +94,11 @@ export function ThemeProvider({
     return defaultTheme
   })
 
-  const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>(() =>
-    theme === "system" ? getSystemTheme() : theme
+  // 系统主题只在 system 模式下参与派生；订阅维护它，render 期不读媒体查询。
+  const [systemTheme, setSystemTheme] = React.useState<ResolvedTheme>(() =>
+    getSystemTheme()
   )
+  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme
 
   const setTheme = React.useCallback(
     (nextTheme: Theme) => {
@@ -117,7 +119,6 @@ export function ThemeProvider({
 
       root.classList.remove("light", "dark")
       root.classList.add(resolvedTheme)
-      setResolvedTheme(resolvedTheme)
 
       if (restoreTransitions) {
         restoreTransitions()
@@ -135,6 +136,7 @@ export function ThemeProvider({
 
     const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
     const handleChange = () => {
+      setSystemTheme(getSystemTheme())
       applyTheme("system")
     }
 
