@@ -14,6 +14,7 @@ import { NEWS_STATUS_OPTIONS, newsContentValid } from "@/lib/adminDomain"
 import { describeError, type ErrorDetail } from "@/lib/api"
 import { fault, infoFault, validationFault } from "@/lib/faults"
 import { renderMarkdown } from "@/lib/markdown"
+import { htmlToMarkdown } from "@/lib/htmlToMarkdown"
 
 /** 加载 / 错误 / 数据三态同源；不在各事件里散着维护布尔量（对齐 AdminUsersPage）。 */
 type View = { data: AdminNews | null; fault: ErrorDetail | null; loading: boolean }
@@ -70,6 +71,9 @@ export function AdminNewsEditPage(): ReactElement {
   const newsId = isNew ? null : id!
 
   const [form, setForm] = useState<Form>(EMPTY_FORM)
+  /** 旧文章的原始 HTML；正文未改时原样提交，避免有损往返。 */
+  const [legacyHtml, setLegacyHtml] = useState<string | null>(null)
+  const [contentDirty, setContentDirty] = useState(false)
   const [view, setView] = useState<View>({
     data: null,
     fault: null,
@@ -99,9 +103,13 @@ export function AdminNewsEditPage(): ReactElement {
     result.then(
       (data) => {
         if (seq !== requestSeq.current) return
+        const raw = data.content ?? ""
+        const isHtml = /<[a-z][\s\S]*>/i.test(raw)
+        setLegacyHtml(isHtml ? raw : null)
+        setContentDirty(false)
         setForm({
           title: data.title ?? "",
-          content: data.content ?? "",
+          content: isHtml ? htmlToMarkdown(raw) : raw,
           coverImage: data.coverImage ?? undefined,
           status: data.status ?? undefined,
         })
@@ -137,13 +145,15 @@ export function AdminNewsEditPage(): ReactElement {
 
     setSaving(true)
     try {
+      // 旧版 HTML 且正文没改：原样提交，不做有损往返。
+      const content = legacyHtml && !contentDirty ? legacyHtml : renderMarkdown(form.content)
       // status 只在后端给过时才上送：键缺席 → DTO 的 status 为 null →
       // MyBatis-Plus NOT_NULL 策略跳过 UPDATE SET，库中现值保持。老数据（NewsVO
       // 没有 status）因此不会被一次编辑静默降成草稿；新数据则能真正改发布状态。
       await saveNews({
         ...(newsId ? { id: newsId } : {}),
         title: form.title,
-        content: form.content,
+        content,
         ...(form.status === undefined ? {} : { status: form.status }),
         // 无条件上送 coverImage：后端 MyBatis-Plus 默认 FieldStrategy.NOT_NULL，
         // null 字段不进 UPDATE SET。清封面时若用 `...(coverImage ? {…} : {})` 丢键，
@@ -271,6 +281,12 @@ export function AdminNewsEditPage(): ReactElement {
             <p className="admin-newsedit__guide num">{NEW_GUIDE}</p>
           ) : null}
 
+          {legacyHtml ? (
+            <p className="admin-newsedit__guide num">
+              本文为旧版 HTML，正文已转换为 Markdown 供编辑；一旦修改并保存，将以 Markdown 重写正文。
+            </p>
+          ) : null}
+
           {formFault ? (
             <FaultNote className="admin-newsedit__fault" fault={formFault} variant="field" />
           ) : null}
@@ -389,7 +405,10 @@ export function AdminNewsEditPage(): ReactElement {
                   <textarea
                     className="admin-newsedit__textarea"
                     value={form.content}
-                    onChange={(event) => patch({ content: event.target.value })}
+                    onChange={(event) => {
+                      setContentDirty(true)
+                      patch({ content: event.target.value })
+                    }}
                     placeholder="用 Markdown 撰写正文…"
                     aria-label="正文"
                   />
