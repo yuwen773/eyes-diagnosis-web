@@ -22,18 +22,13 @@ export function ChatInput({
   onSend: (text: string, files: File[]) => Promise<boolean>
   onStop: () => void
 }) {
-  const [text, setText] = useState("")
+  // 草稿：跳登录页来回一趟不丢字。惰性初始化即可，不必用 effect 回填。
+  const [text, setText] = useState(() => loadDraft())
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [hint, setHint] = useState("")
   const [focused, setFocused] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // 草稿：跳登录页来回一趟不丢字
-  useEffect(() => {
-    const restored = loadDraft()
-    if (restored) setText(restored)
-  }, [])
 
   function updateText(next: string) {
     setText(next)

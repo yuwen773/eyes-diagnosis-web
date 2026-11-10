@@ -84,10 +84,12 @@ function FaultToast({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string
   const { fault } = toast
   const [paused, setPaused] = useState(false)
   const left = useRef(DWELL[fault.severity])
-  const since = useRef(Date.now())
+  // 渲染期不能读时钟（不纯）；进入计时 effect 时再落一次时间戳。
+  const since = useRef(0)
 
   useEffect(() => {
     if (paused) return
+    if (!since.current) since.current = Date.now()
     const timer = window.setTimeout(() => onDismiss(toast.id), left.current)
     return () => window.clearTimeout(timer)
   }, [paused, toast.id, onDismiss])
