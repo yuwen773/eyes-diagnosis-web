@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
+import { getChatHistory, getSessions, type AgentSessionVO, type ChatHistoryVO } from "@/lib/api"
 import { AgentPage } from "./AgentPage"
 
 const sessionState = vi.hoisted(() => ({
@@ -21,10 +22,15 @@ vi.mock("@/lib/session", () => ({
 }))
 
 const sendMock = vi.hoisted(() => vi.fn())
+// reset 必须整个会话稳定——否则初始化 effect 每次渲染都重跑，历史被反复拉取。
+const resetMock = vi.hoisted(() => vi.fn())
 
-vi.mock("@/lib/agentStream", async () => {
+vi.mock("@/lib/agentStream", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/agentStream")>()
   const React = await import("react")
   return {
+    // 保留 mapHistoryMessage 等真实导出：AgentPage 用它把历史映射成流消息。
+    ...actual,
     useAgentStream: () => {
       const [messages, setMessages] = React.useState<unknown[]>([])
       return {
@@ -35,7 +41,7 @@ vi.mock("@/lib/agentStream", async () => {
         abort: vi.fn(),
         pushUser: (message: unknown) => setMessages((prev) => [...prev, message]),
         setMessages,
-        reset: vi.fn(),
+        reset: resetMock,
       }
     },
   }
@@ -56,6 +62,8 @@ afterEach(() => {
   sessionState.status = "anon"
   sessionState.user = null
   localStorage.clear()
+  vi.mocked(getSessions).mockResolvedValue([])
+  vi.mocked(getChatHistory).mockReset()
 })
 
 /** jsdom 没有 matchMedia——主题探测要用。 */
@@ -118,6 +126,62 @@ describe("AgentPage 未登录", () => {
     fireEvent.click(screen.getByRole("button", { name: "展开会话栏" }))
     expect(document.querySelector(".agent-layout__left.is-collapsed")).toBeNull()
     expect(document.querySelector(".agent-sessions")).toBeTruthy()
+  })
+
+  it("切换会话后旧历史不落到新会话", async () => {
+    sessionState.status = "authed"
+    sessionState.user = { id: 1, userAccount: "tester" }
+    const session = (id: string, title: string): AgentSessionVO => ({
+      sessionId: id,
+      title,
+      lastMessage: "",
+      messageCount: 1,
+      summaryContent: "",
+      createdTime: "2026-11-08 10:00:00",
+      updatedTime: "2026-11-08 10:00:00",
+    })
+    vi.mocked(getSessions).mockResolvedValue([session("A", "会话 A"), session("B", "会话 B")])
+
+    const deferred = () => {
+      let resolve!: (value: ChatHistoryVO) => void
+      const promise = new Promise<ChatHistoryVO>((r) => {
+        resolve = r
+      })
+      return { promise, resolve }
+    }
+    const historyA = deferred()
+    const historyB = deferred()
+    vi.mocked(getChatHistory).mockImplementation((id) =>
+      id === "A" ? historyA.promise : historyB.promise,
+    )
+    const history = (content: string): ChatHistoryVO => ({
+      messages: [
+        { id: 1, role: "ASSISTANT", subType: "", content, isSummary: false, createdTime: "2026-11-08 10:00:00" },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    })
+
+    stubMatchMedia()
+    render(
+      <ThemeProvider>
+        <MemoryRouter initialEntries={["/agent"]}>
+          <Routes>
+            <Route path="/agent" element={<AgentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>,
+    )
+
+    // A 的请求先发出、B 的请求后发出——但 A 晚到，不能覆盖已经显示的 B。
+    fireEvent.click(await screen.findByRole("button", { name: /会话 A/ }))
+    fireEvent.click(await screen.findByRole("button", { name: /会话 B/ }))
+    await act(async () => historyB.resolve(history("B 的新消息")))
+    expect(await screen.findByText("B 的新消息")).toBeTruthy()
+
+    await act(async () => historyA.resolve(history("A 的旧消息")))
+    expect(screen.queryByText("A 的旧消息")).toBeNull()
+    expect(screen.getByText("B 的新消息")).toBeTruthy()
   })
 
   it("发送失败时撤回乐观消息，输入框保留原文", async () => {
