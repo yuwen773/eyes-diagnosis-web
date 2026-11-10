@@ -120,8 +120,8 @@ export function AgentPage() {
   }, [status, refreshSessions, loadHistoryMessages])
 
   const handleSend = useCallback(
-    async (text: string, files: File[] = []) => {
-      if ((!text.trim() && files.length === 0) || isStreaming) return
+    async (text: string, files: File[] = []): Promise<boolean> => {
+      if ((!text.trim() && files.length === 0) || isStreaming) return false
 
       // 必须在 pushUser 之前判断：用户消息推入后 messages 已非空，
       // 放到后面判断会让"是否首条消息"永远为假，标题生成从不触发。
@@ -137,11 +137,12 @@ export function AgentPage() {
         }
       } catch (e) {
         pushFault(faultFromError(e, { intent: "upload" }))
-        return
+        return false
       }
 
+      const localId = crypto.randomUUID()
       pushUser({
-        id: crypto.randomUUID(),
+        id: localId,
         type: "user",
         content: text,
         time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
@@ -163,9 +164,13 @@ export function AgentPage() {
             .then(() => refreshSessions())
             .catch((e) => console.warn("标题生成触发失败", e))
         }
+        return true
       } catch (e) {
         uploader.commitFailure(imageUrls)
+        // 发送失败：撤回乐观消息，输入框会保留原文，重试时才不会出现两条一样的用户气泡。
+        setMessages((prev) => prev.filter((message) => message.id !== localId))
         pushFault(faultFromError(e, { intent: "send" }))
+        return false
       }
     },
     [isStreaming, messages.length, threadId, uploader, pushUser, send, refreshSessions, pushFault],
@@ -359,7 +364,7 @@ export function AgentPage() {
             <ChatInput
               disabled={false}
               streaming={isStreaming}
-              onSend={(text, files) => void handleSend(text, files)}
+              onSend={handleSend}
               onStop={abort}
             />
           </div>
