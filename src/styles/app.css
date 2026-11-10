@@ -1618,10 +1618,6 @@ html:not(.dark) .pitch__glass.auth__glass::before {
   overflow-y: auto;
 }
 
-.composer__textarea:focus {
-  outline: none;
-}
-
 .composer__textarea::placeholder {
   color: var(--ink-3);
   opacity: 0.85;
@@ -4038,7 +4034,6 @@ html:not(.dark) .auth__beam {
 }
 
 .field__input:focus {
-  outline: none;
   border-color: var(--ink);
   background: var(--field);
 }

@@ -571,10 +571,6 @@
   transition: opacity var(--base);
 }
 
-.admin-modal:focus {
-  outline: none;
-}
-
 .admin-modal__head {
   display: flex;
   align-items: center;
@@ -652,10 +648,6 @@
   transform: none;
   visibility: visible;
   transition: transform var(--base);
-}
-
-.admin-drawer:focus {
-  outline: none;
 }
 
 .admin-drawer__head {
@@ -1207,7 +1199,6 @@
 }
 
 .admin-users__input:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -1342,7 +1333,6 @@
 }
 
 .admin-news__input:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -1458,7 +1448,6 @@
 }
 
 .admin-diagnosis__input:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -1725,7 +1714,6 @@
 
 .admin-diagnosis__review-input:focus,
 .admin-diagnosis__review-select:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -2003,7 +1991,6 @@
 }
 
 .admin-analysis__select:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -2198,7 +2185,6 @@
 }
 
 .admin-newsedit__select:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -2246,7 +2232,6 @@
 }
 
 .admin-newsedit__input:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -2271,7 +2256,6 @@
 }
 
 .admin-newsedit__select:focus {
-  outline: none;
   border-color: var(--signal);
 }
 
@@ -2377,7 +2361,6 @@
 }
 
 .admin-newsedit__textarea:focus {
-  outline: none;
   border-color: var(--signal);
 }
 

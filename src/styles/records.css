@@ -366,7 +366,6 @@
 }
 
 .profile__input:focus {
-  outline: none;
   border-color: var(--signal);
   background: var(--surface);
 }
