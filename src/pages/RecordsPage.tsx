@@ -11,9 +11,12 @@ import {
   type DiagnosisResult,
 } from "@/lib/api"
 import {
-  canRequestReexamine,
+  loadMyStats,
   reexamineLabel,
+  reexamineView,
+  statsLabels,
   summarizeRecords,
+  type ScopedStats,
 } from "@/lib/records"
 import {
   classCode,
@@ -80,26 +83,32 @@ export function RecordsPage() {
   const data = list.key === requestKey ? list.data : null
   const records = useMemo(() => data?.records ?? [], [data])
 
-  const stats = useMemo(
-    () => summarizeRecords(records, data?.total ?? 0),
-    [records, data],
-  )
+  const [scoped, setScoped] = useState<ScopedStats | null>(null)
+
+  // 服务端聚合优先；接口未上线或失败时 loadMyStats 自己降级到本页。
+  useEffect(() => {
+    if (list.key !== requestKey || !data) return
+    let alive = true
+    void loadMyStats(records, data.total ?? 0).then((value) => {
+      if (alive) setScoped(value)
+    })
+    return () => {
+      alive = false
+    }
+  }, [data, records, list.key, requestKey])
+
+  const stats = scoped?.stats ?? summarizeRecords(records, data?.total ?? 0)
+  const labels = statsLabels(scoped?.scope ?? "page")
 
   /** 展开的记录详情。同一时刻只开一条。 */
   const [openId, setOpenId] = useState<string | null>(null)
   const [detail, setDetail] = useState<DetailState | null>(null)
-
-  // 展开态与分页联动：翻页就收起，别把上一页的记录纸带到下一页。
-  useEffect(() => {
-    setOpenId(null)
-    setDetail(null)
-  }, [requestKey])
+  const [detailKey, setDetailKey] = useState(0)
 
   useEffect(() => {
     if (!openId) return
     let alive = true
 
-    setDetail({ id: openId, result: null, fault: null, reexamined: false, submitting: false })
     getMyDiagnosis(openId).then(
       (value) => {
         if (alive) setDetail((prev) => (prev?.id === openId ? { ...prev, result: value } : prev))
@@ -115,7 +124,7 @@ export function RecordsPage() {
     return () => {
       alive = false
     }
-  }, [openId])
+  }, [openId, detailKey])
 
   async function submitReexamine(id: string) {
     setDetail((prev) => (prev?.id === id ? { ...prev, submitting: true } : prev))
@@ -143,15 +152,35 @@ export function RecordsPage() {
     }
   }
 
+  function closeDetail() {
+    setOpenId(null)
+    setDetail(null)
+  }
+
+  function openDetail(id: string) {
+    setOpenId(id)
+    setDetail({ id, result: null, fault: null, reexamined: false, submitting: false })
+  }
+
   function toggle(id: string) {
-    setOpenId((current) => (current === id ? null : id))
+    if (openId === id) closeDetail()
+    else openDetail(id)
+  }
+
+  function retryDetail() {
+    setDetail((prev) => (prev ? { ...prev, result: null, fault: null } : prev))
+    setDetailKey((value) => value + 1)
   }
 
   function retry() {
+    closeDetail()
+    setScoped(null)
     setReload((value) => value + 1)
   }
 
   function goPage(next: number) {
+    closeDetail()
+    setScoped(null)
     setPage(next)
   }
 
@@ -175,25 +204,25 @@ export function RecordsPage() {
         <div className="strip records__strip">
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">判读总数 · TOTAL（全部）</span>
+              <span className="readout__label">{labels.total}</span>
               <span className="readout__value num">{stats.total}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">本页高风险 · SEVERE</span>
+              <span className="readout__label">{labels.highRisk}</span>
               <span className="readout__value num">{stats.highRisk}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">本页待人工复核 · REVIEW</span>
+              <span className="readout__label">{labels.awaitingReview}</span>
               <span className="readout__value num">{stats.awaitingReview}</span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">本页最新 · LAST IN PAGE</span>
+              <span className="readout__label">{labels.lastReadAt}</span>
               <span className="readout__value readout__value--mono">
                 {stats.lastReadAt ? formatTimestamp(stats.lastReadAt) : "—"}
               </span>
@@ -201,9 +230,12 @@ export function RecordsPage() {
           </div>
         </div>
 
-        <p className="records__scope">
-          总数是你名下的全部判读；其余三项只统计当前这一页（第 {page} / {pages} 页），翻页会变。
-        </p>
+        {scoped?.scope === "all" ? null : (
+          <p className="records__scope">
+            总数是你名下的全部判读；带「本页」的三项只统计当前这一页（第 {page} / {pages}
+            页），翻页会变。服务端聚合上线后会自动切到全量。
+          </p>
+        )}
 
         {fault ? (
           <FaultPanel
@@ -306,7 +338,7 @@ export function RecordsPage() {
                             title="这条记录没有读出来"
                             body={detail.fault.text}
                             endpoint={`GET /diagnosis/get/${item.id}`}
-                            onRetry={() => toggle(item.id)}
+                            onRetry={retryDetail}
                           />
                         ) : detail.result ? (
                           <>
@@ -316,31 +348,43 @@ export function RecordsPage() {
                               imageSrc={item.url ?? detail.result.url}
                               tone="paper"
                             />
-                            {canRequestReexamine(item) ? (
-                              <div className="records__actions">
-                                {detail.reexamined ? (
-                                  <span className="records__actions-done">
-                                    <RiskTag risk="attention">复审中</RiskTag>
-                                    申请已提交，等待医生安排复诊。
-                                  </span>
-                                ) : (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="btn"
-                                      disabled={detail.submitting}
-                                      onClick={() => void submitReexamine(item.id)}
-                                    >
-                                      {detail.submitting ? "提交中…" : "申请复诊"}
-                                      <span className="btn__key">↻</span>
-                                    </button>
-                                    <span className="records__actions-note">
-                                      提交后这条记录进入复诊队列，状态变为「复审中」。
+                            {(() => {
+                              const view = reexamineView(item, detail.reexamined)
+                              if (!view) return null
+                              if (view === "receipt") {
+                                return (
+                                  <div className="records__actions">
+                                    <span className="records__actions-done">
+                                      <RiskTag risk="attention">复审中</RiskTag>
+                                      申请已提交，等待医生安排复诊。
                                     </span>
-                                  </>
-                                )}
-                              </div>
-                            ) : null}
+                                  </div>
+                                )
+                              }
+                              return (
+                                <div className="records__actions">
+                                  {view === "reviewed" ? (
+                                    <RiskTag risk="normal">已复审</RiskTag>
+                                  ) : null}
+                                  <button
+                                    type="button"
+                                    className="btn"
+                                    disabled={detail.submitting}
+                                    onClick={() => void submitReexamine(item.id)}
+                                  >
+                                    {detail.submitting
+                                      ? "提交中…"
+                                      : view === "reviewed"
+                                        ? "再次申请复诊"
+                                        : "申请复诊"}
+                                    <span className="btn__key">↻</span>
+                                  </button>
+                                  <span className="records__actions-note">
+                                    提交后这条记录进入复诊队列，状态变为「复审中」。
+                                  </span>
+                                </div>
+                              )
+                            })()}
                           </>
                         ) : (
                           <div className="records__detail-loading num">读取中…</div>
