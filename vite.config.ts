@@ -1,11 +1,15 @@
 import { resolve } from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // e2e 是 Playwright 的用例，别被 Vitest 收进来。
+  test: {
+    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+  },
   resolve: {
     alias: {
       "@": resolve(import.meta.dirname, "./src"),
