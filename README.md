@@ -17,7 +17,7 @@ npm run dev        # http://localhost:5173，代理 /api 到 :8081
 - `npm run build` 生产构建
 - `npm run lint` ESLint（B3 起为硬门）
 
-CI 在 `master` 的 push 与 PR 上跑以上命令。master 要求 PR + CI 通过。
+CI 在所有分支推送与所有 PR 上跑以上命令；`master` 要求 PR + CI 通过才能合入。
 
 详细验收计划见
 `docs/superpowers/specs/2026-11-10-web-acceptance-remediation-design.md`。
