@@ -13,7 +13,7 @@ import {
 import { NEWS_STATUS_OPTIONS, newsContentValid } from "@/lib/adminDomain"
 import { describeError, type ErrorDetail } from "@/lib/api"
 import { fault, infoFault, validationFault } from "@/lib/faults"
-import { renderMarkdown } from "@/lib/markdown"
+import { renderNewsHtml } from "@/lib/markdown"
 import { htmlToMarkdown } from "@/lib/htmlToMarkdown"
 
 /** 加载 / 错误 / 数据三态同源；不在各事件里散着维护布尔量（对齐 AdminUsersPage）。 */
@@ -127,8 +127,9 @@ export function AdminNewsEditPage(): ReactElement {
   }
 
   // 只在预览态解析：编辑态每敲一个字都重渲染，没必要把全文再过一遍
-  // markdown+hljs（O(n²)，与 AssistantMessage 的流式策略同源）。
-  const previewHtml = tab === "preview" ? renderMarkdown(form.content) : ""
+  // markdown（与 AssistantMessage 的流式策略同源）。
+  // 预览与落库、公开页显示走同一条管线——所见即所存。
+  const previewHtml = tab === "preview" ? renderNewsHtml(form.content) : ""
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -146,7 +147,8 @@ export function AdminNewsEditPage(): ReactElement {
     setSaving(true)
     try {
       // 旧版 HTML 且正文没改：原样提交，不做有损往返。
-      const content = legacyHtml && !contentDirty ? legacyHtml : renderMarkdown(form.content)
+      // 否则用资讯渲染器存 HTML——与预览、公开页同一条管线。
+      const content = legacyHtml && !contentDirty ? legacyHtml : renderNewsHtml(form.content)
       // status 只在后端给过时才上送：键缺席 → DTO 的 status 为 null →
       // MyBatis-Plus NOT_NULL 策略跳过 UPDATE SET，库中现值保持。老数据（NewsVO
       // 没有 status）因此不会被一次编辑静默降成草稿；新数据则能真正改发布状态。
