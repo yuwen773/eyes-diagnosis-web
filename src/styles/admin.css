@@ -179,7 +179,7 @@
 }
 
 .admin-side__link[aria-current="page"] .admin-side__code {
-  color: var(--signal);
+  color: var(--signal-text);
 }
 
 .admin-side__link[aria-current="page"]::before {

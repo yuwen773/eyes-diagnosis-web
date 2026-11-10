@@ -21,7 +21,7 @@
   /* ── 墨色 / 发丝线（纸面原语；上下文可反转 --ink/--line，纸面靠 --paper-* 钉回）── */
   --paper-ink: #14171a;
   --paper-ink-2: #5c6367;
-  --paper-ink-3: #8b9195;
+  --paper-ink-3: #676e72;
   --paper-line: rgba(20, 23, 26, 0.13);
   --paper-line-strong: rgba(20, 23, 26, 0.34);
   --ink: var(--paper-ink);
@@ -33,6 +33,9 @@
   /* ── 唯一的强调色：信号橙（纸面原语 + 上下文别名）── */
   --paper-signal: #d9541f;
   --signal: var(--paper-signal);
+  /* 橙色只做标记时用 --signal；承载文字时用压深一档的 --signal-text，保证 4.5:1 */
+  --paper-signal-text: #bd4515;
+  --signal-text: var(--paper-signal-text);
   --signal-soft: rgba(217, 84, 31, 0.1);
 
   /* ── 风险语义（与强调色解耦；纸面原语 + 上下文别名）── */
@@ -50,7 +53,7 @@
   --dark: #161a18;
   --on-dark: #f4f5f1;
   --on-dark-2: #a7aeaa;
-  --on-dark-3: #767d79;
+  --on-dark-3: #8d948f;
   --dark-line: rgba(244, 245, 241, 0.16);
   --dark-line-strong: rgba(244, 245, 241, 0.34);
   --dark-surface: #1d2220; /* 反相顶栏里的抬升面板（账号菜单 / 抽屉） */
@@ -126,6 +129,7 @@
   --line: var(--paper-line);
   --line-strong: var(--paper-line-strong);
   --signal: var(--paper-signal);
+  --signal-text: var(--paper-signal-text);
   --risk-normal: var(--paper-risk-normal);
   --risk-attention: var(--paper-risk-attention);
   --risk-critical: var(--paper-risk-critical);
@@ -151,6 +155,7 @@
   --hr: var(--dark-line);
   --hr-strong: var(--dark-line-strong);
   --signal: #ef7a45;
+  --signal-text: #ef7a45;
   --risk-normal: var(--risk-normal-lit);
   --risk-attention: var(--risk-attention-lit);
   --risk-critical: var(--risk-critical-lit);
@@ -200,6 +205,7 @@ html.dark {
   --paper-line-strong: rgba(244, 245, 241, 0.32);
 
   --signal: #ef7a45;
+  --signal-text: #ef7a45;
   --signal-soft: rgba(239, 122, 69, 0.12);
 
   --risk-normal: var(--risk-normal-lit);
@@ -222,7 +228,7 @@ html.dark {
   /* 暗主题下的纸面原语：纸仍是白的，纸上的墨是深色的。 */
   --paper-ink-dark: #14171a;
   --paper-ink-2-dark: #5c6367;
-  --paper-ink-3-dark: #8b9195;
+  --paper-ink-3-dark: #676e72;
   --paper-line-dark: rgba(20, 23, 26, 0.13);
   --paper-line-strong-dark: rgba(20, 23, 26, 0.34);
 }
@@ -235,6 +241,7 @@ html.dark .is-sheet {
   --ink-3: var(--paper-ink-3-dark);
   --line: var(--paper-line-dark);
   --line-strong: var(--paper-line-strong-dark);
+  --signal-text: var(--paper-signal-text);
 }
 
 /* 反相顶栏里的抬升面板跟着翻深，别留白板（账号菜单 / 移动抽屉）。 */
