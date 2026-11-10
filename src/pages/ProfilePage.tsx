@@ -7,7 +7,7 @@ import {
   uploadAvatar,
   type ErrorDetail,
 } from "@/lib/api"
-import { summarizeRecords } from "@/lib/records"
+import { loadMyStats, statsLabels, type ScopedStats } from "@/lib/records"
 import { faultFromError, infoFault, validationFault } from "@/lib/faults"
 import { useFault } from "@/components/fault"
 import { useSession } from "@/lib/session"
@@ -21,6 +21,9 @@ const ROLE_LABEL: Record<string, string> = {
   user: "注册用户",
 }
 
+/** 服务端聚合未上线时，本页统计取自最近这一页记录。 */
+const PROFILE_SAMPLE = 10
+
 export function ProfilePage() {
   const { user, refresh } = useSession()
   const navigate = useNavigate()
@@ -28,32 +31,24 @@ export function ProfilePage() {
 
   const name = user?.userName || user?.userAccount || "账号"
 
-  /* ── 判读统计（首页拉一页大样本本地汇总） ─────────────── */
+  /* ── 判读统计（服务端全量优先，未上线时取最近一页） ───── */
   const [statsKey, setStatsKey] = useState(0)
   const [statsState, setStatsState] = useState<{
     key: number
-    total: number
-    highRisk: number
-    lastReadAt: string | null
+    scoped: ScopedStats | null
     fault: ErrorDetail | null
-  }>({ key: -1, total: 0, highRisk: 0, lastReadAt: null, fault: null })
+  }>({ key: -1, scoped: null, fault: null })
 
   useEffect(() => {
     if (!user) return
     let alive = true
 
-    listMyDiagnoses({ current: 1, pageSize: 100 }).then(
-      (value) => {
-        if (!alive) return
-        const stats = summarizeRecords(value.records ?? [], value.total ?? 0)
-        setStatsState({
-          key: statsKey,
-          total: stats.total,
-          highRisk: stats.highRisk,
-          lastReadAt: stats.lastReadAt,
-          fault: null,
-        })
-      },
+    listMyDiagnoses({ current: 1, pageSize: PROFILE_SAMPLE }).then(
+      (value) =>
+        loadMyStats(value.records ?? [], value.total ?? 0).then((scoped) => {
+          if (!alive) return
+          setStatsState({ key: statsKey, scoped, fault: null })
+        }),
       (cause) => {
         if (!alive) return
         // 统计读不出来不拦着资料编辑，页面降级成「—」并给一条浮条。
@@ -138,6 +133,11 @@ export function ProfilePage() {
 
   const statsLoading = statsState.key !== statsKey
   const statsFault = statsState.key === statsKey ? statsState.fault : null
+  const scoped = statsState.key === statsKey ? statsState.scoped : null
+  const stats = scoped?.stats ?? { total: 0, highRisk: 0 }
+  const labels = statsLabels(scoped?.scope ?? "page")
+  const highRiskLabel =
+    scoped?.scope === "all" ? labels.highRisk : `近 ${PROFILE_SAMPLE} 条高风险`
   const roleLabel = useMemo(
     () => (user?.userRole ? (ROLE_LABEL[user.userRole] ?? user.userRole) : "—"),
     [user?.userRole],
@@ -180,17 +180,17 @@ export function ProfilePage() {
         <div className="strip records__strip">
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">判读总数 · TOTAL</span>
+              <span className="readout__label">{labels.total}</span>
               <span className="readout__value num">
-                {statsFault || statsLoading ? "—" : statsState.total}
+                {statsFault || statsLoading ? "—" : stats.total}
               </span>
             </div>
           </div>
           <div className="strip__cell">
             <div className="readout">
-              <span className="readout__label">高风险 · SEVERE</span>
+              <span className="readout__label">{highRiskLabel}</span>
               <span className="readout__value num">
-                {statsFault || statsLoading ? "—" : statsState.highRisk}
+                {statsFault || statsLoading ? "—" : stats.highRisk}
               </span>
             </div>
           </div>
@@ -217,6 +217,12 @@ export function ProfilePage() {
               重试<span className="link__mark">↻</span>
             </button>
           </div>
+        ) : null}
+
+        {!statsFault && !statsLoading && scoped?.scope !== "all" ? (
+          <p className="records__scope">
+            带「近 {PROFILE_SAMPLE} 条」的统计只取自最近一页记录；服务端聚合上线后会自动切到全量。
+          </p>
         ) : null}
 
         <div className="profile__grid">
