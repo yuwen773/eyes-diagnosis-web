@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   batchDeleteSessions,
   deleteSession,
@@ -11,7 +11,7 @@ import {
   type AgentSessionVO,
 } from "@/lib/api"
 import { useAgentStream, mapHistoryMessage } from "@/lib/agentStream"
-import { useAgentUpload } from "@/lib/agentUpload"
+import { createAgentUploader } from "@/lib/agentUpload"
 import { useSession } from "@/lib/session"
 import { loadThreadId, saveThreadId } from "@/lib/threadStorage"
 import { faultFromError } from "@/lib/faults"
@@ -55,9 +55,9 @@ export function AgentPage() {
   // 与 useAgentStream 的 messages 单一数据源：历史加载也走 setMessages
   const stream = useAgentStream()
   const { messages, isStreaming, resources, send, abort, pushUser, setMessages, reset } = stream
-  // useAgentUpload 每次调用返新对象——不固定住的话 handleSend 的 useCallback
-  // 依赖每渲染都变，等于没有 memo。
-  const uploader = useMemo(() => useAgentUpload(), [])
+  // 上传器每次创建返新对象——不固定住的话 handleSend 的 useCallback
+  // 依赖每渲染都变，等于没有 memo。用惰性 state 只建一次。
+  const [uploader] = useState(createAgentUploader)
 
   const [threadId, setThreadId] = useState(() => generateThreadId())
   // 追踪当前会话：发送期间用户可能切会话，闭包里的 threadId 是旧值，

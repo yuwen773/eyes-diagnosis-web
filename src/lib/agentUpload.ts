@@ -23,7 +23,11 @@ export function filterImageFiles(files: File[]): File[] {
   })
 }
 
-export function useAgentUpload() {
+/**
+ * 上传器工厂。名字不叫 `use*`：它不调任何 Hook，在 `useMemo` 回调里调用
+ * 会被 lint 当成 Hook 误用（规则本身是对的——只是命名误导）。
+ */
+export function createAgentUploader() {
   function fileKey(file: File): string {
     return `${file.name}:${file.size}:${file.lastModified}`
   }
