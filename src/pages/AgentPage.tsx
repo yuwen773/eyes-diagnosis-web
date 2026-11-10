@@ -29,6 +29,12 @@ const generateThreadId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 
+/** 本地消息 id：非安全上下文（内网 http）没有 crypto.randomUUID。 */
+const generateLocalId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
 /** 文件名净化：去掉路径分隔符与系统不允许的字符。 */
 function safeFileName(name: string): string {
   const cleaned = name.replace(/[\\/:*?"<>|]/g, "_").trim()
@@ -151,7 +157,7 @@ export function AgentPage() {
         return false
       }
 
-      const localId = crypto.randomUUID()
+      const localId = generateLocalId()
       pushUser({
         id: localId,
         type: "user",
