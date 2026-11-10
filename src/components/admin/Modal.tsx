@@ -28,6 +28,10 @@ function isTop(token: symbol): boolean {
   return dialogStack[dialogStack.length - 1] === token
 }
 
+/** 面板内可参与 Tab 的元素（与浏览器默认顺序一致，按 DOM 顺序）。 */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 /**
  * Modal / Drawer 共用的受控弹层行为：
  *   - open 时把焦点移入面板（tabIndex=-1 的可聚焦容器），close 时归还给
@@ -76,9 +80,31 @@ export function useAdminDialog(open: boolean, onClose: () => void): {
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
+      if (!tokenRef.current || !isTop(tokenRef.current)) return
       // 叠层时只有栈顶弹层处理 Esc，避免一次按键关掉两层。
-      if (event.key === "Escape" && tokenRef.current && isTop(tokenRef.current)) {
+      if (event.key === "Escape") {
         onClose()
+        return
+      }
+      // Tab 在面板首尾循环：不拦的话焦点会跑到遮罩背后的后台控件上。
+      if (event.key === "Tab") {
+        const panel = panelRef.current
+        if (!panel) return
+        const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE))
+        if (items.length === 0) return
+        const first = items[0]
+        const last = items[items.length - 1]
+        const active = document.activeElement
+        const inside = active instanceof HTMLElement && panel.contains(active)
+        if (event.shiftKey) {
+          if (!inside || active === first) {
+            event.preventDefault()
+            last.focus()
+          }
+        } else if (!inside || active === last) {
+          event.preventDefault()
+          first.focus()
+        }
       }
     }
     document.addEventListener("keydown", onKey)
